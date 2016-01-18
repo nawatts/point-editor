@@ -1,4 +1,5 @@
 import "babel-polyfill";
+import {saveAs} from "filesaverjs";
 import Leaflet from "leaflet";
 import AppBar from "material-ui/lib/app-bar";
 import Dialog from "material-ui/lib/dialog";
@@ -14,6 +15,24 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {Map, Marker, Popup, TileLayer} from "react-leaflet";
 import injectTapEventPlugin from 'react-tap-event-plugin';
+
+var buildGeoJSON = function(points) {
+    return {
+        type: "FeatureCollection",
+        features: points.map((p) => {
+            return {
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [p.location[1], p.location[0]]
+                },
+                properties: {
+                    label: p.label
+                }
+            };
+        })
+    };
+};
 
 class App extends React.Component {
 
@@ -111,6 +130,11 @@ class App extends React.Component {
         window.localStorage.setItem("points", JSON.stringify(points));
     }
 
+    onSavePointsToFile() {
+        var pointsBlob = new Blob([JSON.stringify(buildGeoJSON(this.state.points))], { type: "application/json" });
+        saveAs(pointsBlob, "points.json");
+    }
+
     renderMarker(point, index) {
         return <Marker
             draggable={true}
@@ -147,6 +171,9 @@ class App extends React.Component {
                         <MenuItem
                             onTouchTap={this.onRequestLocate.bind(this)}
                             primaryText="Locate"/>
+                        <MenuItem
+                            onTouchTap={this.onSavePointsToFile.bind(this)}
+                            primaryText="Export Points"/>
                     </IconMenu>
 
                     </span>}
@@ -248,3 +275,4 @@ class App extends React.Component {
 injectTapEventPlugin();
 
 ReactDOM.render(<App/>, document.getElementById("app-container"));
+console.log(saveAs);
