@@ -165,7 +165,7 @@ class App extends React.Component {
                         style={{height:"100%"}}
                         zoom={this.state.mapZoom}>
                         <TileLayer
-                            attribution="&copy; <a href='http://osm.org/copyright'OpenStreetMap</a> contributors"
+                            attribution="&copy; <a href='http://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> contributors"
                             url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"/>
 
                         {this.state.points.map(this.renderMarker.bind(this))}
