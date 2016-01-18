@@ -28,6 +28,17 @@ class App extends React.Component {
         placingNewPoint: false
     };
 
+    componentDidMount() {
+        try {
+            var savedPoints = window.localStorage.getItem("points");
+            if (savedPoints) {
+                this.setState({ points: JSON.parse(savedPoints) });
+            }
+        } catch (e) {
+            this.setState({ errorMessage: "Unable to load points" });
+        }
+    }
+
     onStartAddNewPoint() {
         this.setState({ placingNewPoint: true });
     }
@@ -60,18 +71,21 @@ class App extends React.Component {
             label: this.state.newPointLabel,
             location: this.state.newPointLocation
         };
+        var points = this.state.points.concat([newPoint])
         this.setState({
             newPointLabel: "",
             newPointLocation: null,
-            points: this.state.points.concat([newPoint]),
+            points: points,
             labelingNewPoint: false,
             placingNewPoint: false,
         });
+        window.localStorage.setItem("points", JSON.stringify(points));
     }
 
     onRemovePoint(pointIndex) {
-        var points = this.state.points;
-        this.setState({ points: points.slice(0, pointIndex).concat(points.slice(pointIndex + 1)) });
+        var points = this.state.points.slice(0, pointIndex).concat(this.state.points.slice(pointIndex + 1))
+        this.setState({ points: points });
+        window.localStorage.setItem("points", JSON.stringify(points));
     }
 
     onRequestLocate() {
@@ -79,9 +93,7 @@ class App extends React.Component {
     }
 
     onLocationError() {
-        this.setState({
-            errorMessage: "Unable to locate"
-        });
+        this.setState({ errorMessage: "Unable to locate" });
     }
 
     onLocationFound(e) {
@@ -92,12 +104,11 @@ class App extends React.Component {
     }
 
     onPointMoved(pointIndex, newLatLng) {
-        var points = this.state.points;
-        var movedPoint = points[pointIndex];
+        var movedPoint = this.state.points[pointIndex];
         movedPoint.location = newLatLng;
-        this.setState({
-            points: points.slice(0, pointIndex).concat(movedPoint).concat(points.slice(pointIndex + 1))
-        });
+        var points = this.state.points.slice(0, pointIndex).concat(movedPoint).concat(this.state.points.slice(pointIndex + 1))
+        this.setState({ points: points });
+        window.localStorage.setItem("points", JSON.stringify(points));
     }
 
     renderMarker(point, index) {
