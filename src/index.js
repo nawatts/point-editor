@@ -87,6 +87,28 @@ class App extends React.Component {
         });
     }
 
+    onPointMoved(pointIndex, newLatLng) {
+        var points = this.state.points;
+        var movedPoint = points[pointIndex];
+        movedPoint.location = newLatLng;
+        this.setState({
+            points: points.slice(0, pointIndex).concat(movedPoint).concat(points.slice(pointIndex + 1))
+        });
+    }
+
+    renderMarker(point, index) {
+        return <Marker
+            draggable={true}
+            key={index}
+            ondragend={(e) => {
+                var dropLatLng = e.target.getLatLng();
+                this.onPointMoved(index, [dropLatLng.lat, dropLatLng.lng]);
+            }}
+            position={point.location}>
+            <Popup><span>{point.label}</span></Popup>
+        </Marker>;
+    }
+
     render() {
         return (<div style={{height:"100%"}}>
             <AppBar title="Point Editor"
@@ -131,11 +153,7 @@ class App extends React.Component {
                             attribution="&copy; <a href='http://osm.org/copyright'OpenStreetMap</a> contributors"
                             url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"/>
 
-                        {this.state.points.map((p, i) => {
-                            return <Marker key={i} position={p.location}>
-                                <Popup><span>{p.label}</span></Popup>
-                            </Marker>
-                        })}
+                        {this.state.points.map(this.renderMarker.bind(this))}
 
                     </Map>
 
