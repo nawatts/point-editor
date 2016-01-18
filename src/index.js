@@ -18,6 +18,7 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 class App extends React.Component {
 
     state = {
+        errorMessage: null,
         mapCenterPoint: [34.676684, -82.838031],
         mapZoom: 12,
         newPointLabel: "",
@@ -78,7 +79,9 @@ class App extends React.Component {
     }
 
     onLocationError() {
-
+        this.setState({
+            errorMessage: "Unable to locate"
+        });
     }
 
     onLocationFound(e) {
@@ -187,6 +190,20 @@ class App extends React.Component {
                 onActionTouchTap={this.onCancelAddPoint.bind(this)}
                 onRequestClose={() => {}} // Empty function necessary to prevent call to deprecated dismiss method
                 open={this.state.placingNewPoint}/>
+
+            <Snackbar
+                action="Dismiss"
+                autoHideDuration={2000}
+                message={this.state.errorMessage || ""}
+                onActionTouchTap={() => {
+                    this.setState({ errorMessage: null });
+                }}
+                onRequestClose={(reason) => {
+                    if (reason === "timeout") {
+                        this.setState({ errorMessage: null });
+                    }
+                }}
+                open={this.state.errorMessage !== null}/>
 
             <Dialog
                 actions={[
