@@ -1,4 +1,5 @@
 import "babel-polyfill";
+import Leaflet from "leaflet";
 import AppBar from "material-ui/lib/app-bar";
 import Dialog from "material-ui/lib/dialog";
 import FlatButton from "material-ui/lib/flat-button";
@@ -164,6 +165,9 @@ class App extends React.Component {
                         {this.state.points.map((p, i) => {
                             return <ListItem
                                 key={i}
+                                onTouchTap={(e) => {
+                                    this.refs.map.leafletElement.setView(Leaflet.latLng(p.location[0], p.location[1]), 14, { animate: true });
+                                }}
                                 primaryText={p.label}
                                 rightIconButton={<IconButton
                                     iconClassName="material-icons"
