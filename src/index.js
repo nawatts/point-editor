@@ -135,6 +135,12 @@ class App extends React.Component {
         saveAs(pointsBlob, "points.json");
     }
 
+    updateStateFromMap() {
+        const map = this.refs.map.getLeafletElement();
+        const center = [map.getCenter().lat, map.getCenter().lng];
+        this.setState({ mapCenterPoint: center, mapZoom: map.getZoom() });
+    }
+
     renderMarker(point, index) {
         return <Marker
             draggable={true}
@@ -188,6 +194,9 @@ class App extends React.Component {
                         onClick={this.onClickMap.bind(this)}
                         onLocationerror={this.onLocationError.bind(this)}
                         onLocationfound={this.onLocationFound.bind(this)}
+                        onDrag={this.updateStateFromMap.bind(this)}
+                        onDragEnd={this.updateStateFromMap.bind(this)}
+                        onZoomEnd={this.updateStateFromMap.bind(this)}
                         ref="map"
                         style={{height:"100%"}}
                         zoom={this.state.mapZoom}>
