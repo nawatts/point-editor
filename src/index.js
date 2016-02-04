@@ -34,17 +34,20 @@ var buildGeoJSON = function(points) {
     };
 };
 
+const BROWSING_MAP = "BROWSING_MAP";
+const PLACING_NEW_POINT = "PLACING_NEW_POINT";
+const LABELING_NEW_POINT = "LABELING_NEW_POINT";
+
 class App extends React.Component {
 
     state = {
+        action: BROWSING_MAP,
         errorMessage: null,
         mapCenterPoint: [34.676684, -82.838031],
         mapZoom: 12,
         newPointLabel: "",
         newPointLocation: null,
-        points: [],
-        labelingNewPoint: false,
-        placingNewPoint: false
+        points: []
     };
 
     componentDidMount() {
@@ -59,25 +62,23 @@ class App extends React.Component {
     }
 
     onStartAddNewPoint() {
-        this.setState({ placingNewPoint: true });
+        this.setState({ action: PLACING_NEW_POINT });
     }
 
     onClickMap(e) {
-        if (this.state.placingNewPoint) {
+        if (this.state.action === PLACING_NEW_POINT) {
             this.setState({
-                newPointLocation: [e.latlng.lat, e.latlng.lng],
-                labelingNewPoint: true,
-                placingNewPoint: false,
+                action: LABELING_NEW_POINT,
+                newPointLocation: [e.latlng.lat, e.latlng.lng]
             });
         }
     }
 
     onCancelAddPoint() {
         this.setState({
+            action: BROWSING_MAP,
             newPointLabel: "",
-            newPointLocation: null,
-            labelingNewPoint: false,
-            placingNewPoint: false
+            newPointLocation: null
         });
     }
 
@@ -92,11 +93,10 @@ class App extends React.Component {
         };
         var points = this.state.points.concat([newPoint])
         this.setState({
+            action: BROWSING_MAP,
             newPointLabel: "",
             newPointLocation: null,
-            points: points,
-            labelingNewPoint: false,
-            placingNewPoint: false,
+            points: points
         });
         window.localStorage.setItem("points", JSON.stringify(points));
     }
@@ -227,7 +227,7 @@ class App extends React.Component {
                 message="Click the map to place a point"
                 onActionTouchTap={this.onCancelAddPoint.bind(this)}
                 onRequestClose={() => {}} // Empty function necessary to prevent call to deprecated dismiss method
-                open={this.state.placingNewPoint}/>
+                open={this.state.action === PLACING_NEW_POINT}/>
 
             <Snackbar
                 action="Dismiss"
@@ -257,7 +257,7 @@ class App extends React.Component {
                         primary={true}/>
                 ]}
                 onRequestClose={null}
-                open={this.state.labelingNewPoint}
+                open={this.state.action === LABELING_NEW_POINT}
                 title="New Point">
                 <TextField
                     errorStyle={{color:"red"}}
