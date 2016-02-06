@@ -37,11 +37,13 @@ var buildGeoJSON = function(points) {
 const BROWSING_MAP = "BROWSING_MAP";
 const PLACING_NEW_POINT = "PLACING_NEW_POINT";
 const LABELING_NEW_POINT = "LABELING_NEW_POINT";
+const EDITING_POINT_LABEL = "EDITING_POINT_LABEL";
 
 class App extends React.Component {
 
     state = {
         action: BROWSING_MAP,
+        editingPointAtIndex: null,
         errorMessage: null,
         mapCenterPoint: [34.676684, -82.838031],
         mapZoom: 12,
@@ -77,6 +79,7 @@ class App extends React.Component {
     onCancelAddPoint() {
         this.setState({
             action: BROWSING_MAP,
+            editingPointAtIndex: null,
             newPointLabel: "",
             newPointLocation: null
         });
@@ -86,17 +89,42 @@ class App extends React.Component {
         this.setState({ newPointLabel: e.target.value });
     }
 
-    onSubmitNewPoint() {
-        var newPoint = {
-            label: this.state.newPointLabel,
-            location: this.state.newPointLocation
-        };
+    onSubmitPointLabel() {
+        switch (this.state.action) {
+            case LABELING_NEW_POINT:
+                var newPoint = {
+                    label: this.state.newPointLabel,
+                    location: this.state.newPointLocation
+                };
+                this.setState({
+                    action: BROWSING_MAP,
+                    newPointLabel: "",
+                    newPointLocation: null
+                });
+                this.updatePoints(this.state.points.concat([newPoint]));
+                break;
+            case EDITING_POINT_LABEL:
+                var index = this.state.editingPointAtIndex
+                var editedPoint = this.state.points[index];
+                editedPoint.label = this.state.newPointLabel;
+                this.setState({
+                    action: BROWSING_MAP,
+                    editingPointAtIndex: null,
+                    newPointLabel: ""
+                });
+                this.updatePoints(this.state.points.slice(0, index)
+                    .concat(editedPoint)
+                    .concat(this.state.points.slice(index + 1)));
+                break;
+        }
+    }
+
+    onEditPointLabel(pointIndex) {
         this.setState({
-            action: BROWSING_MAP,
-            newPointLabel: "",
-            newPointLocation: null
+            action: EDITING_POINT_LABEL,
+            editingPointAtIndex: pointIndex,
+            newPointLabel: this.state.points[pointIndex].label
         });
-        this.updatePoints(this.state.points.concat([newPoint]));
     }
 
     onRemovePoint(pointIndex) {
@@ -217,11 +245,18 @@ class App extends React.Component {
                         this.refs.map.leafletElement.setView(Leaflet.latLng(p.location[0], p.location[1]), 14, { animate: true });
                     }}
                     primaryText={p.label}
-                    rightIconButton={<IconButton
-                        iconClassName="material-icons"
-                        onTouchTap={() => { this.onRemovePoint(i); }}
-                        tooltip="Remove Point"
-                        tooltipPosition="bottom-left">remove_circle</IconButton>}
+                    rightIconButton={<span>
+                        <IconButton
+                            iconClassName="material-icons"
+                            onTouchTap={() => { this.onEditPointLabel(i); }}
+                            tooltip="Edit Point"
+                            tooltipPosition="bottom-left">edit</IconButton>
+                        <IconButton
+                            iconClassName="material-icons"
+                            onTouchTap={() => { this.onRemovePoint(i); }}
+                            tooltip="Remove Point"
+                            tooltipPosition="bottom-left">remove_circle</IconButton>
+                    </span>}
                     secondaryText={`${p.location[0].toFixed(4)}, ${p.location[1].toFixed(4)}`}/>;
             })}
         </List>);
@@ -261,7 +296,7 @@ class App extends React.Component {
     }
 
     renderLabelingNewPointDialog() {
-        if (this.state.action === LABELING_NEW_POINT) {
+        if (this.state.action === LABELING_NEW_POINT || this.state.action === EDITING_POINT_LABEL) {
             return (<Dialog
                 actions={[
                     <FlatButton
@@ -271,19 +306,20 @@ class App extends React.Component {
                         secondary={true}/>,
                     <FlatButton
                         key="submit"
-                        label="Add"
-                        onTouchTap={this.onSubmitNewPoint.bind(this)}
+                        label={this.state.action === LABELING_NEW_POINT ? "Add" : "Edit"}
+                        onTouchTap={this.onSubmitPointLabel.bind(this)}
                         primary={true}/>
                 ]}
                 onRequestClose={null}
-                open={this.state.action === LABELING_NEW_POINT}
-                title="New Point">
+                open={true}
+                title={this.state.action === LABELING_NEW_POINT ? "New Point" : "Editing Point"}>
                 <TextField
                     errorStyle={{color:"red"}}
                     errorText={this.state.newPointLabel.length > 0 ? null : "Required"}
                     floatingLabelText="Point Label"
                     onChange={this.onChangeNewPointLabel.bind(this)}
-                    onEnterKeyDown={this.onSubmitNewPoint.bind(this)}/>
+                    onEnterKeyDown={this.onSubmitPointLabel.bind(this)}
+                    value={this.state.newPointLabel}/>
             </Dialog>);
         } else {
             return null;
