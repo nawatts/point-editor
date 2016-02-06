@@ -91,20 +91,17 @@ class App extends React.Component {
             label: this.state.newPointLabel,
             location: this.state.newPointLocation
         };
-        var points = this.state.points.concat([newPoint])
         this.setState({
             action: BROWSING_MAP,
             newPointLabel: "",
-            newPointLocation: null,
-            points: points
+            newPointLocation: null
         });
-        window.localStorage.setItem("points", JSON.stringify(points));
+        this.updatePoints(this.state.points.concat([newPoint]));
     }
 
     onRemovePoint(pointIndex) {
-        var points = this.state.points.slice(0, pointIndex).concat(this.state.points.slice(pointIndex + 1))
-        this.setState({ points: points });
-        window.localStorage.setItem("points", JSON.stringify(points));
+        this.updatePoints(this.state.points.slice(0, pointIndex)
+            .concat(this.state.points.slice(pointIndex + 1)));
     }
 
     onRequestLocate() {
@@ -125,9 +122,9 @@ class App extends React.Component {
     onPointMoved(pointIndex, newLatLng) {
         var movedPoint = this.state.points[pointIndex];
         movedPoint.location = newLatLng;
-        var points = this.state.points.slice(0, pointIndex).concat(movedPoint).concat(this.state.points.slice(pointIndex + 1))
-        this.setState({ points: points });
-        window.localStorage.setItem("points", JSON.stringify(points));
+        this.updatePoints(this.state.points.slice(0, pointIndex)
+            .concat(movedPoint)
+            .concat(this.state.points.slice(pointIndex + 1)));
     }
 
     onSavePointsToFile() {
@@ -139,6 +136,11 @@ class App extends React.Component {
         const map = this.refs.map.getLeafletElement();
         const center = [map.getCenter().lat, map.getCenter().lng];
         this.setState({ mapCenterPoint: center, mapZoom: map.getZoom() });
+    }
+
+    updatePoints(newPoints) {
+        this.setState({ points: newPoints });
+        window.localStorage.setItem("points", JSON.stringify(newPoints));
     }
 
     renderHeader() {
