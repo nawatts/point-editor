@@ -141,6 +141,58 @@ class App extends React.Component {
         this.setState({ mapCenterPoint: center, mapZoom: map.getZoom() });
     }
 
+    renderHeader() {
+        return (<AppBar title="Point Editor"
+            iconElementRight={<span>
+
+                <IconButton
+                    iconClassName="material-icons"
+                    onTouchTap={this.onStartAddNewPoint.bind(this)}
+                    iconStyle={{color:"#fff"}}
+                    tooltip="Add New Point"
+                    tooltipPosition="bottom-left">add_circle</IconButton>
+
+                <IconMenu
+                    iconButtonElement={<IconButton
+                        iconClassName="material-icons"
+                        iconStyle={{color:"#fff"}}
+                        tooltip="More"
+                        tooltipPosition="bottom-left">more_vert</IconButton>}
+                    targetOrigin={{horizontal:"right", vertical:"top"}}
+                    anchorOrigin={{horizontal:"right", vertical:"top"}}>
+                    <MenuItem
+                        onTouchTap={this.onRequestLocate.bind(this)}
+                        primaryText="Locate"/>
+                    <MenuItem
+                        onTouchTap={this.onSavePointsToFile.bind(this)}
+                        primaryText="Export Points"/>
+                </IconMenu>
+
+                </span>}
+            showMenuIconButton={false}></AppBar>);
+    }
+
+    renderMap() {
+        return (<Map
+            center={this.state.mapCenterPoint}
+            onClick={this.onClickMap.bind(this)}
+            onLocationerror={this.onLocationError.bind(this)}
+            onLocationfound={this.onLocationFound.bind(this)}
+            onDrag={this.updateStateFromMap.bind(this)}
+            onDragEnd={this.updateStateFromMap.bind(this)}
+            onZoomEnd={this.updateStateFromMap.bind(this)}
+            ref="map"
+            style={{height:"100%"}}
+            zoom={this.state.mapZoom}>
+            <TileLayer
+                attribution="&copy; <a href='http://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> contributors"
+                url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"/>
+
+            {this.state.points.map(this.renderMarker.bind(this))}
+
+        </Map>);
+    }
+
     renderMarker(point, index) {
         return <Marker
             draggable={true}
@@ -154,91 +206,28 @@ class App extends React.Component {
         </Marker>;
     }
 
-    render() {
-        return (<div style={{height:"100%"}}>
-            <AppBar title="Point Editor"
-                iconElementRight={<span>
-
-                    <IconButton
+    renderPointsList() {
+        return (<List>
+            {this.state.points.map((p, i) => {
+                return <ListItem
+                    key={i}
+                    onTouchTap={(e) => {
+                        this.refs.map.leafletElement.setView(Leaflet.latLng(p.location[0], p.location[1]), 14, { animate: true });
+                    }}
+                    primaryText={p.label}
+                    rightIconButton={<IconButton
                         iconClassName="material-icons"
-                        onTouchTap={this.onStartAddNewPoint.bind(this)}
-                        iconStyle={{color:"#fff"}}
-                        tooltip="Add New Point"
-                        tooltipPosition="bottom-left">add_circle</IconButton>
+                        onTouchTap={() => { this.onRemovePoint(i); }}
+                        tooltip="Remove Point"
+                        tooltipPosition="bottom-left">remove_circle</IconButton>}
+                    secondaryText={`${p.location[0].toFixed(4)}, ${p.location[1].toFixed(4)}`}/>;
+            })}
+        </List>);
+    }
 
-                    <IconMenu
-                        iconButtonElement={<IconButton
-                            iconClassName="material-icons"
-                            iconStyle={{color:"#fff"}}
-                            tooltip="More"
-                            tooltipPosition="bottom-left">more_vert</IconButton>}
-                        targetOrigin={{horizontal:"right", vertical:"top"}}
-                        anchorOrigin={{horizontal:"right", vertical:"top"}}>
-                        <MenuItem
-                            onTouchTap={this.onRequestLocate.bind(this)}
-                            primaryText="Locate"/>
-                        <MenuItem
-                            onTouchTap={this.onSavePointsToFile.bind(this)}
-                            primaryText="Export Points"/>
-                    </IconMenu>
-
-                    </span>}
-                showMenuIconButton={false}></AppBar>
-
-            <div style={{height: "calc(100% - 64px)"}}>
-
-                <div style={{float:"left", height:"100%", width:"calc(100% - 301px)"}}>
-
-                    <Map
-                        center={this.state.mapCenterPoint}
-                        onClick={this.onClickMap.bind(this)}
-                        onLocationerror={this.onLocationError.bind(this)}
-                        onLocationfound={this.onLocationFound.bind(this)}
-                        onDrag={this.updateStateFromMap.bind(this)}
-                        onDragEnd={this.updateStateFromMap.bind(this)}
-                        onZoomEnd={this.updateStateFromMap.bind(this)}
-                        ref="map"
-                        style={{height:"100%"}}
-                        zoom={this.state.mapZoom}>
-                        <TileLayer
-                            attribution="&copy; <a href='http://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> contributors"
-                            url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"/>
-
-                        {this.state.points.map(this.renderMarker.bind(this))}
-
-                    </Map>
-
-                </div>
-
-                <div style={{borderLeft: "1px solid #ddd", float:"left", height:"100%", width:"300px"}}>
-                    <List>
-                        {this.state.points.map((p, i) => {
-                            return <ListItem
-                                key={i}
-                                onTouchTap={(e) => {
-                                    this.refs.map.leafletElement.setView(Leaflet.latLng(p.location[0], p.location[1]), 14, { animate: true });
-                                }}
-                                primaryText={p.label}
-                                rightIconButton={<IconButton
-                                    iconClassName="material-icons"
-                                    onTouchTap={() => { this.onRemovePoint(i); }}
-                                    tooltip="Remove Point"
-                                    tooltipPosition="bottom-left">remove_circle</IconButton>}
-                                secondaryText={`${p.location[0].toFixed(4)}, ${p.location[1].toFixed(4)}`}/>;
-                        })}
-                    </List>
-                </div>
-
-            </div>
-
-            <Snackbar
-                action="Cancel"
-                message="Click the map to place a point"
-                onActionTouchTap={this.onCancelAddPoint.bind(this)}
-                onRequestClose={() => {}} // Empty function necessary to prevent call to deprecated dismiss method
-                open={this.state.action === PLACING_NEW_POINT}/>
-
-            <Snackbar
+    renderErrorSnackbar() {
+        if (this.state.errorMessage) {
+            return (<Snackbar
                 action="Dismiss"
                 autoHideDuration={2000}
                 message={this.state.errorMessage || ""}
@@ -250,9 +239,28 @@ class App extends React.Component {
                         this.setState({ errorMessage: null });
                     }
                 }}
-                open={this.state.errorMessage !== null}/>
+                open={true}/>);
+        } else {
+            return null;
+        }
+    }
 
-            <Dialog
+    renderPlacingNewPointSnackbar() {
+        if (this.state.action === PLACING_NEW_POINT) {
+            return (<Snackbar
+                action="Cancel"
+                message="Click the map to place a point"
+                onActionTouchTap={this.onCancelAddPoint.bind(this)}
+                onRequestClose={() => {}} // Empty function necessary to prevent call to deprecated dismiss method
+                open={true}/>);
+        } else {
+            return null;
+        }
+    }
+
+    renderLabelingNewPointDialog() {
+        if (this.state.action === LABELING_NEW_POINT) {
+            return (<Dialog
                 actions={[
                     <FlatButton
                         key="cancel"
@@ -274,7 +282,33 @@ class App extends React.Component {
                     floatingLabelText="Point Label"
                     onChange={this.onChangeNewPointLabel.bind(this)}
                     onEnterKeyDown={this.onSubmitNewPoint.bind(this)}/>
-            </Dialog>
+            </Dialog>);
+        } else {
+            return null;
+        }
+    }
+
+
+
+    render() {
+        return (<div style={{height:"100%"}}>
+            {this.renderHeader()}
+
+            <div style={{height: "calc(100% - 64px)"}}>
+
+                <div style={{float:"left", height:"100%", width:"calc(100% - 301px)"}}>
+                    {this.renderMap()}
+                </div>
+
+                <div style={{borderLeft: "1px solid #ddd", float:"left", height:"100%", width:"300px"}}>
+                    {this.renderPointsList()}
+                </div>
+
+            </div>
+
+            {this.renderErrorSnackbar()}
+            {this.renderPlacingNewPointSnackbar()}
+            {this.renderLabelingNewPointDialog()}
 
         </div>);
     }
