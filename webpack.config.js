@@ -39,7 +39,7 @@ var webpackConfig = {
                 collapseWhitespace: true,
                 removeComments: true
             } : false
-        }),
+        })
     ],
     stats: {
         colors: true,
@@ -58,6 +58,11 @@ var webpackConfig = {
 
 if (isProd) {
     webpackConfig.plugins = webpackConfig.plugins.concat([
+        new webpack.DefinePlugin({
+            "process.env": {
+                NODE_ENV: JSON.stringify("production")
+            }
+        }),
         new webpack.optimize.OccurenceOrderPlugin(true),
         new webpack.optimize.UglifyJsPlugin()
     ]);
