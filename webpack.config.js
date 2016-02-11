@@ -19,7 +19,7 @@ var webpackConfig = {
         filename: "bundle.js",
         // Full URL required for fonts to work correctly
         // http://stackoverflow.com/questions/30762323/webpack-must-i-specify-the-domain-in-publicpath-for-url-directive-to-work-in
-        publicPath: isProd ? "/" : DEV_SERVER_PATH
+        publicPath: isProd ? "" : DEV_SERVER_PATH
     },
     debug: !isProd,
     devServer: {
