@@ -1,15 +1,9 @@
 ---
-    parser: babel-eslint
-    env:
-        # http://eslint.org/docs/user-guide/configuring.html#specifying-environments
-        browser: true
-        es6: true
-        node: true
-    plugins:
-        # https://www.npmjs.com/package/eslint-plugin-react
-        - react
-    rules:
-        # https://www.npmjs.com/package/eslint-plugin-react
-        # http://eslint.org/docs/rules/
-        no-console: 0
-        strict: 0
+  extends: airbnb
+  parser: babel-eslint
+  env:
+    # http://eslint.org/docs/user-guide/configuring.html#specifying-environments
+    browser: true
+  rules:
+    # http://eslint.org/docs/rules/
+    no-console: 0
