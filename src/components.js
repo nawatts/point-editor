@@ -1,16 +1,16 @@
 /* eslint-disable react/no-multi-comp */
 import { saveAs } from 'filesaverjs';
 import Leaflet from 'leaflet';
-import AppBar from 'material-ui/lib/app-bar';
-import Dialog from 'material-ui/lib/dialog';
-import FlatButton from 'material-ui/lib/flat-button';
-import IconButton from 'material-ui/lib/icon-button';
-import List from 'material-ui/lib/lists/list';
-import ListItem from 'material-ui/lib/lists/list-item';
-import IconMenu from 'material-ui/lib/menus/icon-menu';
-import MenuItem from 'material-ui/lib/menus/menu-item';
-import Snackbar from 'material-ui/lib/snackbar';
-import TextField from 'material-ui/lib/text-field';
+import AppBar from 'material-ui/AppBar';
+import Dialog from 'material-ui/Dialog';
+import FlatButton from 'material-ui/FlatButton';
+import IconButton from 'material-ui/IconButton';
+import { List, ListItem } from 'material-ui/List';
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import Snackbar from 'material-ui/Snackbar';
+import TextField from 'material-ui/TextField';
 import React from 'react';
 import { Map, Marker, Popup, TileLayer } from 'react-leaflet';
 import { hashHistory } from 'react-router';
@@ -100,7 +100,11 @@ export class LabelPointDialog extends React.Component {
           onChange={(e) => {
             this.setState({ labelValue: e.target.value });
           }}
-          onEnterKeyDown={this.onSubmit}
+          onKeyDown={(e) => {
+            if (e.keyCode === 13) {
+              this.onSubmit(e);
+            }
+          }}
           ref="textField"
           value={this.state.labelValue}
         />
@@ -305,33 +309,35 @@ export class App extends React.Component {
 
   render() {
     return (
-      <div style={{ height: '100%' }}>
-        {this.renderHeader()}
+      <MuiThemeProvider>
+        <div style={{ height: '100%' }}>
+          {this.renderHeader()}
 
-        <div style={{ height: 'calc(100% - 64px)' }}>
-          <div
-            style={{
-              float: 'left',
-              height: '100%',
-              width: 'calc(100% - 301px)',
-            }}
-          >
-          {this.renderMap()}
+          <div style={{ height: 'calc(100% - 64px)' }}>
+            <div
+              style={{
+                float: 'left',
+                height: '100%',
+                width: 'calc(100% - 301px)',
+              }}
+            >
+            {this.renderMap()}
+            </div>
+            <div
+              style={{
+                borderLeft: '1px solid #ddd',
+                float: 'left',
+                height: '100%',
+                width: '300px',
+              }}
+            >
+            {this.renderPointsList()}
+            </div>
           </div>
-          <div
-            style={{
-              borderLeft: '1px solid #ddd',
-              float: 'left',
-              height: '100%',
-              width: '300px',
-            }}
-          >
-          {this.renderPointsList()}
-          </div>
+          {this.renderErrorSnackbar()}
+          {this.props.children}
         </div>
-        {this.renderErrorSnackbar()}
-        {this.props.children}
-      </div>
+      </MuiThemeProvider>
     );
   }
 
