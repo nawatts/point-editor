@@ -1,26 +1,27 @@
+const childProcess = require('child_process');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const process = require('process');
 const webpack = require('webpack');
 
+const isGhPagesDeploy = !!(process.env.GH_PAGES_DEPLOY);
 const isProd = !!(process.env.NODE_ENV === 'production');
 
 const DEV_SERVER_PORT = 3000;
-const DEV_SERVER_PATH = `http://localhost:${DEV_SERVER_PORT}/`;
+
+let outputPublicPath;
+if (isGhPagesDeploy) {
+  const repoURL = childProcess.execSync('git config --get remote.origin.url').toString().trim();
+  const repoName = repoURL.split('/').slice(-1)[0].replace(/\.git$/, '');
+  outputPublicPath = `/${repoName}`;
+} else if (isProd) {
+  outputPublicPath = '/';
+} else {
+  outputPublicPath = `http://localhost:${DEV_SERVER_PORT}/`;
+}
 
 // http://webpack.github.io/docs/tutorials/getting-started/
 const webpackConfig = {
-  entry: {
-    javascript: ['./src/index.js'],
-  },
-  output: {
-    pathinfo: !isProd,
-    path: path.join(__dirname, 'build'),
-    filename: 'bundle.js',
-    // Full URL required for fonts to work correctly
-    // http://stackoverflow.com/questions/30762323/webpack-must-i-specify-the-domain-in-publicpath-for-url-directive-to-work-in
-    publicPath: isProd ? '' : DEV_SERVER_PATH,
-  },
   debug: !isProd,
   devServer: {
     contentBase: path.join(__dirname, 'src'),
@@ -30,6 +31,22 @@ const webpackConfig = {
     },
   },
   devtool: isProd ? 'source-map' : 'cheap-module-eval-source-map',
+  entry: './src/index.js',
+  module: {
+    loaders: [
+      {
+        test: /\.js$/,
+        loaders: ['babel'],
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  output: {
+    filename: 'bundle.js',
+    path: path.join(__dirname, 'build'),
+    pathinfo: !isProd,
+    publicPath: outputPublicPath,
+  },
   plugins: [
     new webpack.NoErrorsPlugin(),
     new HtmlWebpackPlugin({
@@ -44,15 +61,6 @@ const webpackConfig = {
   stats: {
     colors: true,
     progress: true,
-  },
-  module: {
-    loaders: [
-      {
-        test: /\.js$/,
-        loaders: ['babel'],
-        exclude: /node_modules/,
-      },
-    ],
   },
 };
 
